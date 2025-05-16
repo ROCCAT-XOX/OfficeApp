@@ -1,0 +1,31 @@
+---
+const { title } = Astro.props; // Titel als Prop an jede Seite weitergeben
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{title}</title>
+
+	<!-- Standard-Favicon -->
+	<link rel="icon" type="image/png" href="/Icon_Cateon_RGB.png" sizes="32x32">
+	<link rel="icon" type="image/png" href="/Icon_Cateon_RGB.png" sizes="192x192">
+	<link rel="apple-touch-icon" href="/Icon_Cateon_RGB.png">
+
+	<!-- Weitere Meta-Tags oder globale Styles -->
+</head>
+<body class="bg-white h-full">
+<slot />
+</body>
+</html>
+
+<style>
+	html,
+	body {
+		margin: 0;
+		width: 100%;
+		height: 100%;
+	}
+</style>

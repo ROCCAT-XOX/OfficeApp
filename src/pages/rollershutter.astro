@@ -1,0 +1,19 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Sidebar from "../components/Sidebar.jsx";
+import RelayButton from "../components/RelayButton.jsx";
+---
+
+<Layout title="Roller Shutter">
+    <Sidebar client:load />
+
+    <!-- Hauptinhalt -->
+    <main class="lg:pl-72 p-4">
+        <h1 class="text-2xl font-bold mb-4 text-center">Roller Shutter</h1>
+
+        <div class="flex justify-center gap-4 m-3">
+            <RelayButton relayId={7} label="Öffnen" client:load />
+            <RelayButton relayId={8} label="Schließen" client:load />
+        </div>
+    </main>
+</Layout>

@@ -1,0 +1,30 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Sidebar from "../components/Sidebar.jsx";
+import EseraToggleButton from "../components/EseraToggleButton.jsx";
+---
+
+<Layout title="Sliding Door">
+    <Sidebar client:load />
+
+    <main class="lg:pl-72 p-4">
+        <h1 class="text-2xl font-bold mb-4 text-center">Light</h1>
+        <div class="flex justify-center gap-4 m-3">
+            <EseraToggleButton relayId={7} label="Deckenleuchte" client:load />
+        </div>
+        <div class="flex justify-center gap-4 m-3">
+            <EseraToggleButton relayId={1} label="Teamraum" client:load />
+            <EseraToggleButton relayId={2} label="Lorabella" client:load />
+        </div>
+        <div class="flex justify-center gap-4 m-3">
+            <EseraToggleButton relayId={3} label="Besprechung" client:load />
+            <EseraToggleButton relayId={4} label="Arbeitsplatz" client:load />
+        </div>
+
+        <div class="flex justify-center gap-4 m-3">
+            <EseraToggleButton relayId={5} label="Dimmen" client:load />
+            <EseraToggleButton relayId={8} label="Decke blau" client:load />
+        </div>
+        <!-- Weitere Buttons für andere Relais -->
+    </main>
+</Layout>

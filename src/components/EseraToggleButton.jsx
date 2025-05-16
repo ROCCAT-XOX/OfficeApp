@@ -1,0 +1,48 @@
+import React, { useState } from "react";
+
+export default function EseraToggleButton({ relayId, label }) {
+    const [isOn, setIsOn] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const handleClick = async () => {
+        // Bestimme den nächsten Zustand: Wenn aktuell aus, dann "on", sonst "off"
+        const newState = isOn ? "off" : "on";
+        console.log(`Relay ${relayId}: Sende Befehl für ${newState}`);
+        setLoading(true);
+        try {
+            const response = await fetch(`http://localhost:8080/esera/${relayId}/${newState}`, {
+                method: "POST",
+            });
+            if (!response.ok) {
+                console.error("Request fehlgeschlagen:", response.statusText);
+                return;
+            }
+            const data = await response.json();
+            console.log("Erfolg:", data);
+
+            setIsOn(!isOn);
+        } catch (error) {
+            console.error("Fehler beim Senden des Requests:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            disabled={loading}
+            className={`
+        inline-flex items-center justify-center 
+        w-36 h-12  
+        ${isOn ? "bg-green-500 hover:bg-green-700" : "bg-red-500 hover:bg-red-700"} 
+        text-white font-bold 
+        px-4 py-2 rounded 
+        transition-colors duration-200
+        shadow-md
+      `}
+        >
+            {label}
+        </button>
+    );
+}
