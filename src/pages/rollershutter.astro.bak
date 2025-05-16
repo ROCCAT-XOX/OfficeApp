@@ -1,0 +1,142 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Sidebar from "../components/Sidebar.jsx";
+---
+
+<Layout title="Roller Shutter">
+    <Sidebar client:load />
+
+    <main class="lg:pl-72 p-4">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Roller Shutter Control</h1>
+
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="mb-6">
+                    <p class="text-center text-gray-600 mb-6">Control the office roller shutters with the buttons below.</p>
+
+                    <div class="relative w-full h-48 bg-gray-100 rounded-lg mb-8 overflow-hidden">
+                        <!-- Simple animated roller shutter illustration -->
+                        <div id="shutter-animation" class="absolute inset-0">
+                            <div class="h-full w-full flex flex-col">
+                                <div id="shutter-slats" class="flex-grow bg-gray-300 transition-all duration-1000 ease-in-out transform origin-top" style="transform: scaleY(0.1);">
+                                    <!-- Slat lines -->
+                                    <div class="h-1 w-full bg-gray-400 mt-4"></div>
+                                    <div class="h-1 w-full bg-gray-400 mt-4"></div>
+                                    <div class="h-1 w-full bg-gray-400 mt-4"></div>
+                                    <div class="h-1 w-full bg-gray-400 mt-4"></div>
+                                    <div class="h-1 w-full bg-gray-400 mt-4"></div>
+                                    <div class="h-1 w-full bg-gray-400 mt-4"></div>
+                                </div>
+                                <!-- Window frame -->
+                                <div class="absolute inset-0 border-8 border-gray-500 rounded-lg pointer-events-none"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center gap-8">
+                        <button
+                                id="openShutterBtn"
+                                class="inline-flex items-center justify-center w-40 h-14 bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-3 rounded-lg transition-all duration-200 shadow-md"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                            </svg>
+                            Open
+                        </button>
+
+                        <button
+                                id="closeShutterBtn"
+                                class="inline-flex items-center justify-center w-40 h-14 bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-3 rounded-lg transition-all duration-200 shadow-md"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            Close
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center text-sm text-gray-500 mt-6">
+                    <p class="text-xs">Using relays 7 (Open) and 8 (Close)</p>
+                    <p id="shutterStatus" class="mt-2 font-medium"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<script>
+    // Animation and button logic for the roller shutter
+    document.addEventListener('DOMContentLoaded', () => {
+        const openBtn = document.getElementById('openShutterBtn');
+        const closeBtn = document.getElementById('closeShutterBtn');
+        const shutterSlats = document.getElementById('shutter-slats');
+        const statusText = document.getElementById('shutterStatus');
+        const apiUrl = 'http://localhost:8080';
+
+        // Variable to track the current state (0 = closed, 1 = open)
+        let isOpen = false;
+
+        // Set initial status
+        updateStatus();
+
+        // Function to update the status text
+        function updateStatus() {
+            if (statusText) {
+                const now = new Date();
+                statusText.textContent = `Shutter is ${isOpen ? 'open' : 'closed'} • Last updated: ${now.toLocaleTimeString()}`;
+                statusText.className = `mt-2 font-medium ${isOpen ? 'text-green-600' : 'text-red-600'}`;
+            }
+        }
+
+        // Open button action
+        if (openBtn) {
+            openBtn.addEventListener('click', async () => {
+                try {
+                    // Send command to the backend
+                    const response = await fetch(`${apiUrl}/relais/7/on`, {
+                        method: "POST",
+                    });
+
+                    if (response.ok) {
+                        // Animate the shutter opening
+                        if (shutterSlats) {
+                            shutterSlats.style.transform = 'scaleY(0.1)';
+                        }
+                        isOpen = true;
+                        updateStatus();
+                    } else {
+                        console.error("Failed to open shutter:", response.statusText);
+                    }
+                } catch (error) {
+                    console.error("Error opening shutter:", error);
+                }
+            });
+        }
+
+        // Close button action
+        if (closeBtn) {
+            closeBtn.addEventListener('click', async () => {
+                try {
+                    // Send command to the backend
+                    const response = await fetch(`${apiUrl}/relais/8/on`, {
+                        method: "POST",
+                    });
+
+                    if (response.ok) {
+                        // Animate the shutter closing
+                        if (shutterSlats) {
+                            shutterSlats.style.transform = 'scaleY(1)';
+                        }
+                        isOpen = false;
+                        updateStatus();
+                    } else {
+                        console.error("Failed to close shutter:", response.statusText);
+                    }
+                } catch (error) {
+                    console.error("Error closing shutter:", error);
+                }
+            });
+        }
+    });
+</script>

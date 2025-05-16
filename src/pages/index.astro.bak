@@ -1,0 +1,208 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Sidebar from "../components/Sidebar.jsx";
+---
+
+<Layout title="Home - Office Control">
+	<Sidebar client:load />
+
+	<main class="lg:pl-72 p-4">
+		<div class="max-w-3xl mx-auto pt-4">
+			<div class="text-center mb-8">
+				<h1 class="text-3xl font-bold mb-2 text-gray-800">Office Control System</h1>
+				<p class="text-gray-600">Manage your office environment with ease</p>
+			</div>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+				<!-- Sliding Door Card -->
+				<a href="/slidingdoor" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+					<div class="p-6">
+						<div class="flex items-center mb-3">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+							</svg>
+							<h2 class="text-xl font-semibold text-gray-800 ml-2">Sliding Door</h2>
+						</div>
+						<p class="text-gray-600">Control the entrance door mode: automatic, always open, closed, or end of day.</p>
+						<div class="mt-4 flex justify-end">
+							<span class="text-sm font-medium text-indigo-600">Manage &rarr;</span>
+						</div>
+					</div>
+				</a>
+
+				<!-- Lighting Card -->
+				<a href="/light" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+					<div class="p-6">
+						<div class="flex items-center mb-3">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+							</svg>
+							<h2 class="text-xl font-semibold text-gray-800 ml-2">Lighting</h2>
+						</div>
+						<p class="text-gray-600">Control office lights by area, create scenes, and manage lighting preferences.</p>
+						<div class="mt-4 flex justify-end">
+							<span class="text-sm font-medium text-indigo-600">Manage &rarr;</span>
+						</div>
+					</div>
+				</a>
+
+				<!-- Roller Shutter Card -->
+				<a href="/rollershutter" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+					<div class="p-6">
+						<div class="flex items-center mb-3">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+							</svg>
+							<h2 class="text-xl font-semibold text-gray-800 ml-2">Roller Shutter</h2>
+						</div>
+						<p class="text-gray-600">Open and close the roller shutters with a single tap.</p>
+						<div class="mt-4 flex justify-end">
+							<span class="text-sm font-medium text-indigo-600">Manage &rarr;</span>
+						</div>
+					</div>
+				</a>
+
+				<!-- System Status Card -->
+				<div class="block bg-white rounded-lg shadow-lg overflow-hidden">
+					<div class="p-6">
+						<div class="flex items-center mb-3">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+							<h2 class="text-xl font-semibold text-gray-800 ml-2">System Status</h2>
+						</div>
+						<div class="mt-2">
+							<div class="flex items-center justify-between mb-2">
+								<span class="text-gray-600">Backend Connection:</span>
+								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <div class="w-2 h-2 mr-1 rounded-full bg-green-500"></div>
+                                    Connected
+                                </span>
+							</div>
+							<div class="flex items-center justify-between mb-2">
+								<span class="text-gray-600">Door Controller:</span>
+								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Online</span>
+							</div>
+							<div class="flex items-center justify-between mb-2">
+								<span class="text-gray-600">Lighting System:</span>
+								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Online</span>
+							</div>
+							<div class="flex items-center justify-between">
+								<span class="text-gray-600">Last Update:</span>
+								<span class="text-gray-800 text-sm" id="lastSystemUpdate"></span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+				<h2 class="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+					<button id="allLightsOff" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none">
+						All Lights Off
+					</button>
+					<button id="closeDoor" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none">
+						Close Door
+					</button>
+					<button id="dayMode" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">
+						Day Mode
+					</button>
+					<button id="eodMode" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">
+						End of Day
+					</button>
+				</div>
+			</div>
+
+			<div class="text-center text-sm text-gray-500 mt-8">
+				<p>Office Control System &copy; 2024</p>
+			</div>
+		</div>
+	</main>
+</Layout>
+
+<script>
+	// Set the current date/time
+	function updateTime() {
+		const now = new Date();
+		const timestampElement = document.getElementById('lastSystemUpdate');
+		if (timestampElement) {
+			timestampElement.textContent = now.toLocaleTimeString();
+		}
+	}
+
+	// Update time when page loads and every minute
+	updateTime();
+	setInterval(updateTime, 60000);
+
+	// Quick actions functionality
+	document.addEventListener('DOMContentLoaded', () => {
+		const apiUrl = 'http://localhost:8080';
+
+		// All Lights Off button
+		const allLightsOffBtn = document.getElementById('allLightsOff');
+		if (allLightsOffBtn) {
+			allLightsOffBtn.addEventListener('click', async () => {
+				try {
+					for (let i = 1; i <= 8; i++) {
+						await fetch(`${apiUrl}/esera/${i}/off`, { method: "POST" });
+					}
+					alert('All lights turned off');
+				} catch (error) {
+					console.error('Error turning lights off:', error);
+					alert('Failed to turn off lights');
+				}
+			});
+		}
+
+		// Close Door button
+		const closeDoorBtn = document.getElementById('closeDoor');
+		if (closeDoorBtn) {
+			closeDoorBtn.addEventListener('click', async () => {
+				try {
+					await fetch(`${apiUrl}/relais/3/on`, { method: "POST" });
+					alert('Door closed');
+				} catch (error) {
+					console.error('Error closing door:', error);
+					alert('Failed to close door');
+				}
+			});
+		}
+
+		// Day Mode button (Door Automatic & Main Lights On)
+		const dayModeBtn = document.getElementById('dayMode');
+		if (dayModeBtn) {
+			dayModeBtn.addEventListener('click', async () => {
+				try {
+					// Set door to automatic
+					await fetch(`${apiUrl}/relais/1/on`, { method: "POST" });
+					// Turn on main lights
+					await fetch(`${apiUrl}/esera/7/on`, { method: "POST" });
+					alert('Day mode activated');
+				} catch (error) {
+					console.error('Error setting day mode:', error);
+					alert('Failed to set day mode');
+				}
+			});
+		}
+
+		// End of Day button
+		const eodBtn = document.getElementById('eodMode');
+		if (eodBtn) {
+			eodBtn.addEventListener('click', async () => {
+				try {
+					// Set door to End of Day mode
+					await fetch(`${apiUrl}/relais/4/on`, { method: "POST" });
+					// Turn off all lights
+					for (let i = 1; i <= 8; i++) {
+						await fetch(`${apiUrl}/esera/${i}/off`, { method: "POST" });
+					}
+					alert('End of Day mode activated');
+				} catch (error) {
+					console.error('Error setting EOD mode:', error);
+					alert('Failed to set EOD mode');
+				}
+			});
+		}
+	});
+</script>
