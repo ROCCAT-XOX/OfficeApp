@@ -8,4 +8,4 @@ docker-compose up -d --build
 
 echo "Office Control System wird gestartet..."
 echo "Frontend: http://localhost"
-echo "Backend API: http://localhost:8080"
+echo "Backend API: http://10.100.102.111:8080"

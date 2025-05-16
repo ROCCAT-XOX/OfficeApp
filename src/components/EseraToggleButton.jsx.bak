@@ -10,7 +10,7 @@ export default function EseraToggleButton({ relayId, label }) {
         console.log(`Relay ${relayId}: Sende Befehl für ${newState}`);
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:8080/esera/${relayId}/${newState}`, {
+            const response = await fetch(`http://10.100.102.111:8080/esera/${relayId}/${newState}`, {
                 method: "POST",
             });
             if (!response.ok) {

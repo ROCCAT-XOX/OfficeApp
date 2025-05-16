@@ -1,35 +1,35 @@
-# Verwenden eines neueren Go-Images als Basis-Image
-FROM golang:1.24-alpine AS builder
+# Build Stage
+FROM --platform=linux/amd64 golang:1.24-alpine AS builder
 
-# Arbeitsverzeichnis festlegen
+# Set working directory
 WORKDIR /app
 
-# go.mod und go.sum-Dateien kopieren
+# Copy go.mod and go.sum files
 COPY go.mod go.sum ./
 
-# Abhängigkeiten herunterladen
+# Download dependencies
 RUN go mod download
 
-# Quellcode kopieren
+# Copy source code
 COPY *.go ./
 
-# Anwendung bauen
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+# Build the application specifically for linux/amd64
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o main .
 
-# Ein minimales Alpine-Image für die finale Stage verwenden
-FROM alpine:3.19
+# Final Stage
+FROM --platform=linux/amd64 alpine:3.19
 
-# Notwendige Laufzeitabhängigkeiten installieren
+# Install necessary runtime dependencies
 RUN apk --no-cache add ca-certificates
 
-# Arbeitsverzeichnis festlegen
+# Set working directory
 WORKDIR /app
 
-# Binary aus der Builder-Stage kopieren
+# Copy the binary from the builder stage
 COPY --from=builder /app/main .
 
-# Port 8080 freigeben
+# Expose port 8080
 EXPOSE 8080
 
-# Befehl zum Ausführen der ausführbaren Datei
+# Command to run the executable
 CMD ["./main"]

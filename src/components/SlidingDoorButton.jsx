@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-export default function SlidingDoorButton({ relayId, label, icon, apiUrl = "http://localhost:8080" }) {
+export default function SlidingDoorButton({ relayId, label, icon, apiUrl = "http://10.100.102.111:8080" }) {
     // State to track if this button is currently active
     const [isActive, setIsActive] = useState(false);
     // Track loading state during API calls

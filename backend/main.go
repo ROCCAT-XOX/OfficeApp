@@ -97,8 +97,9 @@ func main() {
 	// Route für UniFi Protect Webhooks
 	router.POST("/webhook", HandleUniFiWebhook)
 
-	// Route für Relaissteuerung
+	// Route für Relaissteuerung mit optionalem Dauer-Parameter
 	router.POST("/relais/:relayID/:state", SetRelay)
+	router.POST("/relais/:relayID/:state/:duration", SetRelay)
 
 	// Route für ESERA-Relaissteuerung
 	router.POST("/esera/:eseraID/:state", EseraSetRelay)

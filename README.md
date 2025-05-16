@@ -39,7 +39,7 @@ This will build and start the Docker containers for both the frontend and backen
 ## Accessing the Application
 
 - Frontend: http://localhost
-- Backend API: http://localhost:8080
+- Backend API: http://10.100.102.111:8080
 
 ## API Endpoints
 
@@ -85,3 +85,15 @@ The API URL should be set to `/api` instead of absolute URLs for the Docker setu
 
 - This is a simplified backend implementation. In a production environment, you would connect to actual hardware.
 - The frontend and backend are configured to work with HTTP. For production, consider enabling HTTPS.
+
+## Docker
+
+# Frontend image bauen
+docker build --platform=linux/amd64 -t officeapp-frontend:latest -f Dockerfile .
+
+# Backend image bauen
+docker build --platform=linux/amd64 -t officeapp-backend:latest -f backend/Dockerfile ./backend
+
+# Images speichern
+docker save officeapp-frontend:latest -o officeapp-frontend.tar
+docker save officeapp-backend:latest -o officeapp-backend.tar

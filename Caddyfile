@@ -14,7 +14,7 @@
     # Handle API requests - proxy to backend service
     handle /api/* {
         uri strip_prefix /api
-        reverse_proxy backend:8080
+        reverse_proxy 10.100.102.111:8080
     }
 
     # Handle requests to missing files by serving index.html (SPA fallback)

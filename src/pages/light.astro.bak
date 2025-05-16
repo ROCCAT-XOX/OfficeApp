@@ -46,7 +46,7 @@ import LightControlButton from "../components/LightControlButton.jsx";
     function setupAllLightControls() {
         const allOnButton = document.getElementById('turnAllOn');
         const allOffButton = document.getElementById('turnAllOff');
-        const apiUrl = 'http://localhost:8080';
+        const apiUrl = 'http://10.100.102.111:8080';
 
         if (allOnButton) {
             allOnButton.addEventListener('click', async () => {

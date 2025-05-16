@@ -72,7 +72,7 @@ import Sidebar from "../components/Sidebar.jsx";
         const closeBtn = document.getElementById('closeShutterBtn');
         const shutterSlats = document.getElementById('shutter-slats');
         const statusText = document.getElementById('shutterStatus');
-        const apiUrl = 'http://localhost:8080';
+        const apiUrl = 'http://10.100.102.111:8080';
 
         // Variable to track the current state (0 = closed, 1 = open)
         let isOpen = false;
@@ -99,7 +99,7 @@ import Sidebar from "../components/Sidebar.jsx";
                     });
 
                     if (response.ok) {
-                        // Animate the shutter opening
+                        // Animate the shutter opening (fully retracted)
                         if (shutterSlats) {
                             shutterSlats.style.transform = 'scaleY(0.1)';
                         }
@@ -114,7 +114,7 @@ import Sidebar from "../components/Sidebar.jsx";
             });
         }
 
-        // Close button action
+// Close button action
         if (closeBtn) {
             closeBtn.addEventListener('click', async () => {
                 try {
@@ -124,7 +124,7 @@ import Sidebar from "../components/Sidebar.jsx";
                     });
 
                     if (response.ok) {
-                        // Animate the shutter closing
+                        // Animate the shutter closing (fully extended)
                         if (shutterSlats) {
                             shutterSlats.style.transform = 'scaleY(1)';
                         }

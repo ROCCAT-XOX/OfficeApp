@@ -1,4 +1,5 @@
-FROM node:20-alpine AS build
+# Build Stage
+FROM --platform=linux/amd64 node:20-alpine AS build
 
 # Set working directory
 WORKDIR /app
@@ -14,7 +15,7 @@ COPY . .
 RUN npm run build
 
 # Production image
-FROM caddy:2-alpine
+FROM --platform=linux/amd64 caddy:2-alpine
 
 # Copy the built application from the build stage
 COPY --from=build /app/dist /usr/share/caddy

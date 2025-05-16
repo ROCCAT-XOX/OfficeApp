@@ -72,7 +72,7 @@ import Sidebar from "../components/Sidebar.jsx";
         const closeBtn = document.getElementById('closeShutterBtn');
         const shutterSlats = document.getElementById('shutter-slats');
         const statusText = document.getElementById('shutterStatus');
-        const apiUrl = 'http://localhost:8080';
+        const apiUrl = 'http://10.100.102.111:8080';
 
         // Variable to track the current state (0 = closed, 1 = open)
         let isOpen = false;

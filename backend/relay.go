@@ -15,6 +15,15 @@ import (
 func SetRelay(c *gin.Context) {
 	relayID := c.Param("relayID") // "1", "2", ...
 	state := c.Param("state")     // "on" oder "off"
+	duration := c.Param("duration") // optional: Dauer in Millisekunden
+
+	// Default-Wert für die Dauer
+	durationMs := "400"
+
+	// Wenn eine benutzerdefinierte Dauer angegeben wurde, verwende diese
+	if duration != "" {
+		durationMs = duration
+	}
 
 	// Optional: Gültigkeitsprüfung
 	rID, err := strconv.Atoi(relayID)
@@ -39,8 +48,8 @@ func SetRelay(c *gin.Context) {
 		log.Printf("📝 Türstatus aktualisiert auf: %d", rID)
 	}
 
-	// Den finalen Befehl zusammenbauen, z.B. "SR 1 on"
-	command := fmt.Sprintf("SR %d %s 400", rID, state)
+	// Den finalen Befehl zusammenbauen, z.B. "SR 1 on 400" oder "SR 8 on 60000"
+	command := fmt.Sprintf("SR %d %s %s", rID, state, durationMs)
 
 	// TCP-Verbindung zu 10.100.102.70:17123 herstellen
 	target := "10.100.102.70:17123"
@@ -63,7 +72,7 @@ func SetRelay(c *gin.Context) {
 
 	// Ergebnis zurückgeben
 	c.JSON(http.StatusOK, gin.H{
-		"message": fmt.Sprintf("Relais %s wurde auf '%s' geschaltet", relayID, state),
+		"message": fmt.Sprintf("Relais %s wurde auf '%s' geschaltet (Dauer: %s ms)", relayID, state, durationMs),
 		"status": gin.H{
 			"activeRelay": doorState,
 		},

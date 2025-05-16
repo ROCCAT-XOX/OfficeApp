@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function LightControlButton({ relayId, label, icon, apiUrl = "http://localhost:8080" }) {
+export default function LightControlButton({ relayId, label, icon, apiUrl = "http://10.100.102.111:8080" }) {
     const [isOn, setIsOn] = useState(false);
     const [loading, setLoading] = useState(false);
 
