@@ -1,39 +1,39 @@
 {
     # Global Caddy settings
     admin off
+}
 
-    # Listen on port 80
-    :80 {
-        # Serve static files from /usr/share/caddy
-        root * /usr/share/caddy
+# Listen on port 80
+:80 {
+    # Serve static files from /usr/share/caddy
+    root * /usr/share/caddy
 
-        # Enable file server
+    # Enable file server
+    file_server
+
+    # Handle API requests - proxy to backend service
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy backend:8080
+    }
+
+    # Handle requests to missing files by serving index.html (SPA fallback)
+    handle_errors {
+        @404 {
+            expression {http.error.status_code} == 404
+        }
+        rewrite @404 /index.html
         file_server
+    }
 
-        # Handle API requests - proxy to backend service
-        handle /api/* {
-            uri strip_prefix /api
-            reverse_proxy backend:8080
-        }
+    # Enable compression
+    encode gzip
 
-        # Handle requests to missing files by serving index.html (SPA fallback)
-        handle_errors {
-            @404 {
-                expression {http.error.status_code} == 404
-            }
-            rewrite @404 /index.html
-            file_server
-        }
-
-        # Enable compression
-        encode gzip
-
-        # Add security headers
-        header {
-            X-Content-Type-Options "nosniff"
-            X-Frame-Options "DENY"
-            Referrer-Policy "strict-origin-when-cross-origin"
-            Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        }
+    # Add security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
     }
 }
