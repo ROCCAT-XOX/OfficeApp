@@ -1,9 +1,9 @@
+# Global options
 {
-    # Global Caddy settings
     admin off
 }
 
-# Listen on port 80
+# Site block
 :80 {
     # Serve static files from /usr/share/caddy
     root * /usr/share/caddy
