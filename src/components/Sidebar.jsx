@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Dialog,
     DialogBackdrop,
@@ -9,32 +9,31 @@ import {
     Bars3Icon,
     XMarkIcon,
     HomeIcon,
-    UsersIcon, LightBulbIcon,
+    LightBulbIcon,
+    ArrowRightOnRectangleIcon,
+    WindowIcon,
 } from "@heroicons/react/24/outline";
 
-/**
- * Array mit nur zwei Navigationseinträgen:
- * - Schiebetür
- * - Rolltor
- */
-
 const navigation = [
+    { name: "Home", href: "/", icon: HomeIcon, current: false },
     { name: "Light", href: "/light", icon: LightBulbIcon, current: false },
-    { name: "Sliding Door", href: "/slidingdoor", icon: HomeIcon, current: false },
-    { name: "Roller Shutter", href: "/rollershutter", icon: UsersIcon, current: false },
-
+    { name: "Sliding Door", href: "/slidingdoor", icon: ArrowRightOnRectangleIcon, current: false },
+    { name: "Roller Shutter", href: "/rollershutter", icon: WindowIcon, current: false },
 ];
 
-
-/**
- * Hilfsfunktion zum Zusammenfügen von Klassen.
- */
 function classNames(...classes) {
     return classes.filter(Boolean).join(" ");
 }
 
 export default function Sidebar() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState("");
+
+    // Determine current page on component mount
+    useEffect(() => {
+        const path = window.location.pathname;
+        setCurrentPage(path);
+    }, []);
 
     return (
         <div>
@@ -70,7 +69,7 @@ export default function Sidebar() {
                             </div>
                         </TransitionChild>
 
-                        {/* Sidebar (Mobile) */}
+                        {/* Mobile Sidebar */}
                         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-indigo-600 px-6 pb-4">
                             <div className="flex h-16 shrink-0 items-center">
                                 <img
@@ -88,16 +87,20 @@ export default function Sidebar() {
                                                     <a
                                                         href={item.href}
                                                         className={classNames(
-                                                            item.current
+                                                            currentPage === item.href
                                                                 ? "bg-indigo-700 text-white"
                                                                 : "text-indigo-200 hover:bg-indigo-700 hover:text-white",
                                                             "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
                                                         )}
+                                                        onClick={() => {
+                                                            setCurrentPage(item.href);
+                                                            setSidebarOpen(false);
+                                                        }}
                                                     >
                                                         <item.icon
                                                             aria-hidden="true"
                                                             className={classNames(
-                                                                item.current
+                                                                currentPage === item.href
                                                                     ? "text-white"
                                                                     : "text-indigo-200 group-hover:text-white",
                                                                 "size-6 shrink-0"
@@ -135,16 +138,17 @@ export default function Sidebar() {
                                             <a
                                                 href={item.href}
                                                 className={classNames(
-                                                    item.current
+                                                    currentPage === item.href
                                                         ? "bg-indigo-700 text-white"
                                                         : "text-indigo-200 hover:bg-indigo-700 hover:text-white",
                                                     "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
                                                 )}
+                                                onClick={() => setCurrentPage(item.href)}
                                             >
                                                 <item.icon
                                                     aria-hidden="true"
                                                     className={classNames(
-                                                        item.current ? "text-white" : "text-indigo-200 group-hover:text-white",
+                                                        currentPage === item.href ? "text-white" : "text-indigo-200 group-hover:text-white",
                                                         "size-6 shrink-0"
                                                     )}
                                                 />
@@ -154,19 +158,34 @@ export default function Sidebar() {
                                     ))}
                                 </ul>
                             </li>
+
+                            <li className="mt-auto">
+                                <div className="p-4 bg-indigo-700 rounded-lg">
+                                    <p className="text-xs font-medium text-indigo-200">
+                                        Office Control System
+                                    </p>
+                                    <p className="text-xs text-indigo-200 mt-1">
+                                        Connected to backend
+                                    </p>
+                                    <div className="flex items-center mt-3">
+                                        <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
+                                        <span className="text-xs text-indigo-200 ml-2">System Online</span>
+                                    </div>
+                                </div>
+                            </li>
                         </ul>
                     </nav>
                 </div>
             </div>
 
-            {/* Header-Bereich (optional) */}
+            {/* Header area */}
             <div className="lg:pl-72">
                 <div
                     className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4
-          border-b border-gray-200 bg-white px-4 shadow-xs
-          sm:gap-x-6 sm:px-6 lg:px-8"
+                    border-b border-gray-200 bg-white px-4 shadow-xs
+                    sm:gap-x-6 sm:px-6 lg:px-8"
                 >
-                    {/* Hamburger-Button für Mobile */}
+                    {/* Hamburger menu button for mobile */}
                     <button
                         type="button"
                         onClick={() => setSidebarOpen(true)}
@@ -181,16 +200,13 @@ export default function Sidebar() {
                         className="h-6 w-px bg-gray-900/10 lg:hidden"
                     />
 
-                    {/* Platz für Suchfeld / weitere Inhalte */}
-                    <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-                        {/* ... */}
+                    {/* Page title and breadcrumb */}
+                    <div className="flex flex-1 gap-x-4 self-stretch items-center">
+                        <h1 className="text-lg font-semibold text-gray-900">
+                            {navigation.find(item => item.href === currentPage)?.name || "Office Control"}
+                        </h1>
                     </div>
                 </div>
-
-                {/* Main-Content */}
-                <main className="py-4 px-4 sm:px-6 lg:px-8">
-                    {/* Main-Content from Pages */}
-                </main>
             </div>
         </div>
     );

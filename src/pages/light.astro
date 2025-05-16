@@ -1,30 +1,86 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Sidebar from "../components/Sidebar.jsx";
-import EseraToggleButton from "../components/EseraToggleButton.jsx";
+import LightControlButton from "../components/LightControlButton.jsx";
 ---
 
-<Layout title="Sliding Door">
+<Layout title="Office Lighting">
     <Sidebar client:load />
 
     <main class="lg:pl-72 p-4">
-        <h1 class="text-2xl font-bold mb-4 text-center">Light</h1>
-        <div class="flex justify-center gap-4 m-3">
-            <EseraToggleButton relayId={7} label="Deckenleuchte" client:load />
-        </div>
-        <div class="flex justify-center gap-4 m-3">
-            <EseraToggleButton relayId={1} label="Teamraum" client:load />
-            <EseraToggleButton relayId={2} label="Lorabella" client:load />
-        </div>
-        <div class="flex justify-center gap-4 m-3">
-            <EseraToggleButton relayId={3} label="Besprechung" client:load />
-            <EseraToggleButton relayId={4} label="Arbeitsplatz" client:load />
-        </div>
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Office Lighting</h1>
 
-        <div class="flex justify-center gap-4 m-3">
-            <EseraToggleButton relayId={5} label="Dimmen" client:load />
-            <EseraToggleButton relayId={8} label="Decke blau" client:load />
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Main Areas</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <LightControlButton relayId={7} label="Ceiling Light" client:load />
+                    <LightControlButton relayId={8} label="Blue Accent" client:load />
+                </div>
+
+                <h2 class="text-xl font-semibold mb-4 text-gray-700 mt-8">Work Areas</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <LightControlButton relayId={1} label="Team Room" client:load />
+                    <LightControlButton relayId={2} label="Lorabella" client:load />
+                    <LightControlButton relayId={3} label="Meeting Area" client:load />
+                    <LightControlButton relayId={4} label="Workstation" client:load />
+                </div>
+
+                <h2 class="text-xl font-semibold mb-4 text-gray-700 mt-8">Lighting Scenes</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <LightControlButton relayId={5} label="Dim Mode" client:load />
+                    <button id="turnAllOn" class="inline-flex items-center justify-center w-40 h-14 bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-3 rounded-lg transition-all duration-200 shadow-md">
+                        All Lights On
+                    </button>
+                    <button id="turnAllOff" class="inline-flex items-center justify-center w-40 h-14 bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-3 rounded-lg transition-all duration-200 shadow-md">
+                        All Lights Off
+                    </button>
+                </div>
+            </div>
         </div>
-        <!-- Weitere Buttons für andere Relais -->
     </main>
 </Layout>
+
+<script>
+    // Function to control all lights
+    function setupAllLightControls() {
+        const allOnButton = document.getElementById('turnAllOn');
+        const allOffButton = document.getElementById('turnAllOff');
+        const apiUrl = 'http://localhost:8080';
+
+        if (allOnButton) {
+            allOnButton.addEventListener('click', async () => {
+                // Turn on all lights (relays 1-8)
+                for (let i = 1; i <= 8; i++) {
+                    try {
+                        await fetch(`${apiUrl}/esera/${i}/on`, { method: "POST" });
+                    } catch (error) {
+                        console.error(`Error turning on light ${i}:`, error);
+                    }
+                }
+
+                // Trigger a refresh of all buttons' state
+                window.dispatchEvent(new CustomEvent('allLightsOn'));
+            });
+        }
+
+        if (allOffButton) {
+            allOffButton.addEventListener('click', async () => {
+                // Turn off all lights (relays 1-8)
+                for (let i = 1; i <= 8; i++) {
+                    try {
+                        await fetch(`${apiUrl}/esera/${i}/off`, { method: "POST" });
+                    } catch (error) {
+                        console.error(`Error turning off light ${i}:`, error);
+                    }
+                }
+
+                // Trigger a refresh of all buttons' state
+                window.dispatchEvent(new CustomEvent('allLightsOff'));
+            });
+        }
+    }
+
+    // Set up the event handlers when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', setupAllLightControls);
+</script>
