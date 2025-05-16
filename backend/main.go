@@ -1,112 +1,219 @@
 package main
 
 import (
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
-// Struktur für den Webhook-POST-Request von UniFi Protect
-// UniFi Webhook Struktur
-type UniFiWebhook struct {
-	Alarm struct {
-		Name     string `json:"name"`
-		Triggers []struct {
-			Key    string `json:"key"`
-			Device string `json:"device"`
-		} `json:"triggers"`
-	} `json:"alarm"`
-	Timestamp int64 `json:"timestamp"`
+// Response is the standard API response structure
+type Response struct {
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
-// Eine einfache globale Variable für den Türstatus
-var doorState = 1 // Standardwert: 1 = Automatic
+// RelayState represents the state of each relay
+type RelayState struct {
+	ID     int       `json:"id"`
+	State  string    `json:"state"` // "on" or "off"
+	LastOn time.Time `json:"lastOn,omitempty"`
+}
 
-// Webhook-Handler-Funktion
-func HandleUniFiWebhook(c *gin.Context) {
-	var webhook UniFiWebhook
+// DoorState represents the current door state
+type DoorState struct {
+	ActiveRelay int    `json:"activeRelay"`
+	Status      string `json:"status"`
+}
 
-	// JSON einlesen
-	if err := c.ShouldBindJSON(&webhook); err != nil {
-		log.Printf("❌ Fehler beim Parsen des Webhook-Requests: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
-		return
+var (
+	// Store the state of relays (1-8)
+	relays = make(map[int]*RelayState)
+
+	// Door state tracker
+	doorState = DoorState{
+		ActiveRelay: 1, // Default to automatic
+		Status:      "Automatic",
 	}
+)
 
-	// Timestamp formatieren
-	eventTime := time.Unix(webhook.Timestamp/1000, 0)
-
-	// Log-Output
-	log.Printf("🔔 Webhook erhalten: %s - Zeit: %s", webhook.Alarm.Name, eventTime.Format(time.RFC3339))
-
-	// Welcome-Funktion ausführen (SR 1 ON senden)
-	Welcome()
-
-	c.JSON(http.StatusOK, gin.H{"message": "Webhook empfangen und Welcome ausgeführt"})
-}
-
-// GET-Handler für /webhook
-func GetUniFiWebhook(c *gin.Context) {
-	// Die gesamte Anfrage ausgeben
-	body, err := c.GetRawData()
-	if err != nil {
-		log.Printf("❌ Fehler beim Lesen der Anfrage: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Fehler beim Lesen der Anfrage"})
-		return
+func init() {
+	// Initialize relays
+	for i := 1; i <= 8; i++ {
+		relays[i] = &RelayState{
+			ID:    i,
+			State: "off",
+		}
 	}
-
-	// Log-Output der gesamten Anfrage
-	log.Printf("🔔 Webhook erhalten (GET): %s", string(body))
-
-	// Welcome-Funktion ausführen
-	Welcome()
-	WelcomeEsera()
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Webhook empfangen und Welcome ausgeführt (GET)",
-		"data":    string(body),
-	})
-}
-
-// GET-Handler für /doorstate
-func GetDoorState(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"activeRelay": doorState,
-		"lastUpdated": time.Now().Unix(),
-	})
 }
 
 func main() {
-	// Gin-Engine initialisieren
-	router := gin.Default()
+	router := mux.NewRouter()
 
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	// CORS middleware
+	router.Use(corsMiddleware)
 
-	// Route für UniFi Protect Webhooks (GET)
-	router.GET("/webhook", GetUniFiWebhook)
+	// Define routes
+	router.HandleFunc("/relais/{id}/{state}", handleRelayControl).Methods("POST")
+	router.HandleFunc("/esera/{id}/{state}", handleEseraControl).Methods("POST")
+	router.HandleFunc("/doorstate", getDoorState).Methods("GET")
 
-	// Route für UniFi Protect Webhooks
-	router.POST("/webhook", HandleUniFiWebhook)
+	// Health check endpoint
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		sendJSONResponse(w, Response{
+			Success: true,
+			Message: "Backend is running",
+		})
+	}).Methods("GET")
 
-	// Route für Relaissteuerung
-	router.POST("/relais/:relayID/:state", SetRelay)
+	// Start server
+	fmt.Println("Starting server on port 8080...")
+	log.Fatal(http.ListenAndServe(":8080", router))
+}
 
-	// Route für ESERA-Relaissteuerung
-	router.POST("/esera/:eseraID/:state", EseraSetRelay)
+// corsMiddleware handles CORS for our API
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	// Route für den Türzustand
-	router.GET("/doorstate", GetDoorState)
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 
-	// Server starten
-	log.Println("🚀 Server startet auf http://0.0.0.0:8080")
-	router.Run("0.0.0.0:8080")
+		// Call the next handler
+		next.ServeHTTP(w, r)
+	})
+}
+
+// handleRelayControl manages relay state (door control)
+func handleRelayControl(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	// Extract relay ID and state from URL
+	relayIDStr := vars["id"]
+	state := vars["state"]
+
+	relayID, err := strconv.Atoi(relayIDStr)
+	if err != nil || relayID < 1 || relayID > 8 {
+		sendErrorResponse(w, "Invalid relay ID", http.StatusBadRequest)
+		return
+	}
+
+	if state != "on" && state != "off" {
+		sendErrorResponse(w, "Invalid state. Use 'on' or 'off'", http.StatusBadRequest)
+		return
+	}
+
+	// Update relay state
+	relays[relayID].State = state
+
+	if state == "on" {
+		relays[relayID].LastOn = time.Now()
+
+		// If this is a door control relay (1-4), update door state
+		if relayID >= 1 && relayID <= 4 {
+			doorState.ActiveRelay = relayID
+
+			// Map relay ID to door state
+			switch relayID {
+			case 1:
+				doorState.Status = "Automatic"
+			case 2:
+				doorState.Status = "Always Open"
+			case 3:
+				doorState.Status = "Closed"
+			case 4:
+				doorState.Status = "End of Day"
+			}
+		}
+	}
+
+	log.Printf("Relay %d changed to %s", relayID, state)
+
+	// Return success response
+	sendJSONResponse(w, Response{
+		Success: true,
+		Message: fmt.Sprintf("Relay %d turned %s", relayID, state),
+		Data: map[string]interface{}{
+			"relay": relayID,
+			"state": state,
+		},
+	})
+}
+
+// handleEseraControl manages ESERA relays (lights)
+func handleEseraControl(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	// Extract ID and state from URL
+	idStr := vars["id"]
+	state := vars["state"]
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id < 1 || id > 8 {
+		sendErrorResponse(w, "Invalid ESERA ID", http.StatusBadRequest)
+		return
+	}
+
+	if state != "on" && state != "off" {
+		sendErrorResponse(w, "Invalid state. Use 'on' or 'off'", http.StatusBadRequest)
+		return
+	}
+
+	// This is a simplified example - in reality, you would likely send commands
+	// to actual ESERA hardware here
+
+	// Update our internal state tracking
+	relays[id].State = state
+	if state == "on" {
+		relays[id].LastOn = time.Now()
+	}
+
+	log.Printf("ESERA light %d changed to %s", id, state)
+
+	// Return success response
+	sendJSONResponse(w, Response{
+		Success: true,
+		Message: fmt.Sprintf("Light %d turned %s", id, state),
+		Data: map[string]interface{}{
+			"id":    id,
+			"state": state,
+		},
+	})
+}
+
+// getDoorState returns the current door state
+func getDoorState(w http.ResponseWriter, r *http.Request) {
+	sendJSONResponse(w, Response{
+		Success: true,
+		Message: "Current door state",
+		Data:    doorState,
+	})
+}
+
+// sendJSONResponse sends a JSON response to the client
+func sendJSONResponse(w http.ResponseWriter, resp Response) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+// sendErrorResponse sends an error response to the client
+func sendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(Response{
+		Success: false,
+		Message: message,
+	})
 }
