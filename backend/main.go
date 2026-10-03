@@ -4,81 +4,20 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
-	"net/http"
 	"time"
+	_ "time/tzdata" // Bürozeiten in deutscher Zeit, auch im Alpine-Container ohne Zeitzonen
 )
 
-// Struktur für den Webhook-POST-Request von UniFi Protect
-// UniFi Webhook Struktur
-type UniFiWebhook struct {
-	Alarm struct {
-		Name     string `json:"name"`
-		Triggers []struct {
-			Key    string `json:"key"`
-			Device string `json:"device"`
-		} `json:"triggers"`
-	} `json:"alarm"`
-	Timestamp int64 `json:"timestamp"`
-}
-
-// Eine einfache globale Variable für den Türstatus
-var doorState = 1 // Standardwert: 1 = Automatic
-
-// Webhook-Handler-Funktion
-func HandleUniFiWebhook(c *gin.Context) {
-	var webhook UniFiWebhook
-
-	// JSON einlesen
-	if err := c.ShouldBindJSON(&webhook); err != nil {
-		log.Printf("❌ Fehler beim Parsen des Webhook-Requests: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
-		return
-	}
-
-	// Timestamp formatieren
-	eventTime := time.Unix(webhook.Timestamp/1000, 0)
-
-	// Log-Output
-	log.Printf("🔔 Webhook erhalten: %s - Zeit: %s", webhook.Alarm.Name, eventTime.Format(time.RFC3339))
-
-	// Welcome-Funktion ausführen (SR 1 ON senden)
-	Welcome()
-
-	c.JSON(http.StatusOK, gin.H{"message": "Webhook empfangen und Welcome ausgeführt"})
-}
-
-// GET-Handler für /webhook
-func GetUniFiWebhook(c *gin.Context) {
-	// Die gesamte Anfrage ausgeben
-	body, err := c.GetRawData()
-	if err != nil {
-		log.Printf("❌ Fehler beim Lesen der Anfrage: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Fehler beim Lesen der Anfrage"})
-		return
-	}
-
-	// Log-Output der gesamten Anfrage
-	log.Printf("🔔 Webhook erhalten (GET): %s", string(body))
-
-	// Welcome-Funktion ausführen
-	Welcome()
-	WelcomeEsera()
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Webhook empfangen und Welcome ausgeführt (GET)",
-		"data":    string(body),
-	})
-}
-
-// GET-Handler für /doorstate
-func GetDoorState(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"activeRelay": doorState,
-		"lastUpdated": time.Now().Unix(),
-	})
-}
-
 func main() {
+	cp4n := NewCP4N(CP4NAddress)
+	go cp4n.Run()
+
+	berlin, err := time.LoadLocation("Europe/Berlin")
+	if err != nil {
+		log.Fatalf("Zeitzone: %v", err)
+	}
+	api := &API{cp4n: cp4n, loc: berlin}
+
 	// Gin-Engine initialisieren
 	router := gin.Default()
 
@@ -91,21 +30,22 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// Route für UniFi Protect Webhooks (GET)
-	router.GET("/webhook", GetUniFiWebhook)
+	// UniFi Protect Webhooks (Klingel Schiebetür)
+	router.GET("/webhook", api.WebhookGet)
+	router.POST("/webhook", api.WebhookPost)
 
-	// Route für UniFi Protect Webhooks
-	router.POST("/webhook", HandleUniFiWebhook)
+	// Zustand, Live-Meldungen, Befehle, Szenen, Protokoll – alles über den CP4N
+	router.GET("/state", api.GetState)
+	router.GET("/events", api.Events)
+	router.POST("/cmd", api.Command)
+	router.POST("/scene/:name", api.Scene)
+	router.GET("/log", api.GetLog)
 
-	// Route für Relaissteuerung mit optionalem Dauer-Parameter
-	router.POST("/relais/:relayID/:state", SetRelay)
-	router.POST("/relais/:relayID/:state/:duration", SetRelay)
-
-	// Route für ESERA-Relaissteuerung
-	router.POST("/esera/:eseraID/:state", EseraSetRelay)
-
-	// Route für den Türzustand
-	router.GET("/doorstate", GetDoorState)
+	// Alte Adressen der ersten Office-App, jetzt auf CP4N-Befehle übersetzt
+	router.POST("/relais/:relayID/:state", api.LegacyRelay)
+	router.POST("/relais/:relayID/:state/:duration", api.LegacyRelay)
+	router.POST("/esera/:eseraID/:state", api.LegacyEsera)
+	router.GET("/doorstate", api.GetDoorState)
 
 	// Server starten
 	log.Println("🚀 Server startet auf http://0.0.0.0:8080")
