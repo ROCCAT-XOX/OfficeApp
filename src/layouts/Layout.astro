@@ -3,29 +3,41 @@ const { title } = Astro.props; // Titel als Prop an jede Seite weitergeben
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#0B0D0F">
 	<title>{title}</title>
 
-	<!-- Standard-Favicon -->
 	<link rel="icon" type="image/png" href="/Icon_Cateon_RGB.png" sizes="32x32">
 	<link rel="icon" type="image/png" href="/Icon_Cateon_RGB.png" sizes="192x192">
 	<link rel="apple-touch-icon" href="/Icon_Cateon_RGB.png">
 
-	<!-- Weitere Meta-Tags oder globale Styles -->
 </head>
-<body class="bg-white h-full">
+<body class="bg-ll-bg text-white font-sans antialiased min-h-full">
 <slot />
 </body>
 </html>
 
-<style>
+<style is:global>
+	/* Georama lokal (DSGVO), wie im LeadLift Design System */
+	@font-face { font-family: 'Georama'; src: url('/fonts/Georama-Regular.ttf') format('truetype'); font-weight: 300 400; font-display: swap; }
+	@font-face { font-family: 'Georama'; src: url('/fonts/Georama-Medium.ttf') format('truetype'); font-weight: 500; font-display: swap; }
+	@font-face { font-family: 'Georama'; src: url('/fonts/Georama-SemiBold.ttf') format('truetype'); font-weight: 600; font-display: swap; }
+	@font-face { font-family: 'Georama'; src: url('/fonts/Georama-Bold.ttf') format('truetype'); font-weight: 700 800; font-display: swap; }
+
 	html,
 	body {
 		margin: 0;
 		width: 100%;
-		height: 100%;
+		min-height: 100%;
+		background: #0B0D0F;
+	}
+
+	button:focus-visible,
+	a:focus-visible {
+		outline: 2px solid #4DB8FF;
+		outline-offset: 2px;
 	}
 </style>
